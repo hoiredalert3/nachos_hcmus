@@ -62,16 +62,18 @@ void increaseProgramCounter()
 	kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
 
 	/* set programm counter to next instruction (all Instructions are 4 byte wide)*/
-	kernel->machine->WriteRegister(PCReg, kernel->machine->ReadRegister(PCReg) + 4);
+	kernel->machine->WriteRegister(PCReg, kernel->machine->ReadRegister(NextPCReg));
 
 	/* set next programm counter for brach execution */
-	kernel->machine->WriteRegister(NextPCReg, kernel->machine->ReadRegister(PCReg) + 4);
+	kernel->machine->WriteRegister(NextPCReg, kernel->machine->ReadRegister(NextPCReg) + 4);
 }
 
-// Input: - User space address (int)
-// - Limit of buffer (int)
-// Output:- Buffer (char*)
-// Purpose: Copy buffer from User memory space to System memory space
+// Code copied from file
+//"[2] Giao tiep giua HDH Nachos va chuong trinh nguoi dung.pdf"
+//  Input: - User space address (int)
+//  - Limit of buffer (int)
+//  Output:- Buffer (char*)
+//  Purpose: Copy buffer from User memory space to System memory space
 char *User2System(int virtAddr, int limit)
 {
 	int i; // index
@@ -93,6 +95,8 @@ char *User2System(int virtAddr, int limit)
 	return kernelBuf;
 }
 
+// Code copied from file
+//"[2] Giao tiep giua HDH Nachos va chuong trinh nguoi dung.pdf"
 // Input: - User space address (int)
 // - Limit of buffer (int)
 // - Buffer (char[])
@@ -123,11 +127,14 @@ void ExceptionHandler(ExceptionType which)
 
 	switch (which)
 	{
-	case NoException:
-		DEBUG(dbgSys, "No exception.\n");
+		// Xử lý các exceptions được liệt kê trong machine / machine.h
+		// no exception sẽ trả quyền điều khiển về HĐH
+	case NoException : DEBUG(dbgSys, "No exception.\n");
 		return;
-	case PageFaultException:
-		DEBUG(dbgSys, "No valid translation found.\n");
+		// Hầu hết các exception trong này là run - time errors
+		// khi các exception này xảy ra thì user program không thể được phục hồi
+		// HĐH hiển thị ra một thông báo lỗi và Halt hệ thống
+	case PageFaultException : DEBUG(dbgSys, "No valid translation found.\n");
 		cerr << "No valid translation found. ExceptionType " << which << '\n';
 		SysHalt();
 

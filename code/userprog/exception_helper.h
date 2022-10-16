@@ -43,6 +43,7 @@ void readCharacters()
     memset(characterBuffer, 0, sizeof(characterBuffer));
     char ch = kernel->synchConsoleIn->GetChar();
 
+    //Read the first character and check
     if (ch == EOF || isEmptySpace(ch))
     {
         DEBUG(dbgSys, "Illegal character found, ascii code " << (int)ch << '\n');
@@ -50,19 +51,24 @@ void readCharacters()
     }
 
     int len = 0;
-
+    //Reads until meeting an empty space or EOF
     while (!(isEmptySpace(ch) || ch == EOF))
     {
         characterBuffer[len++] = ch;
         if (len > MAX_NUM_LENGTH)
         {
-            DEBUG(dbgSys, "The number is to long to fit in int32");
+            DEBUG(dbgSys, "The string is too long to fit in int32");
             return;
         }
         ch = kernel->synchConsoleIn->GetChar();
     }
 }
 
+// Read an integer from console and return
+// Uses the above function to read characters from console and store them in characterBuffer
+// Return 0 if meeting errors:
+// - Read letters instead of number
+// - integer overflow
 int ReadNumFromConsole()
 {
     readCharacters();
@@ -111,6 +117,8 @@ int ReadNumFromConsole()
 
 }
 
+// Print an integer to console
+// Uses synchConsoleOut->PutChar to print every digit
 void PrintNumToConsole(int num)
 {
     //Print out '0' if num is 0
@@ -144,18 +152,22 @@ void PrintNumToConsole(int num)
         kernel->synchConsoleOut->PutChar(characterBuffer[i] + '0');
 }
 
+//Read and return a character from console
 char ReadCharFromConsole()
 {
     return kernel->synchConsoleIn->GetChar();
 }
 
+//Print a character to console
 void PrintCharToConsole(char ch)
 {
     kernel->synchConsoleOut->PutChar(ch);
 }
 
+//Return a random positive integer between 1 and INT32_MAX (inclusive)
 int GetRandomNumber()
 {
+    //Call rand from stdlib to create a random number
     int num = rand();
     // GetRandomNumber must return a positive integer
     if (num == 0)
@@ -163,6 +175,8 @@ int GetRandomNumber()
     return num;
 }
 
+//Read and return a string from console
+//Stop when reaching max length or meeting '\n'
 char *ReadStringFromConsole(int len)
 {
     char *str;
@@ -170,11 +184,19 @@ char *ReadStringFromConsole(int len)
     for (int i = 0; i < len; ++i)
     {
         str[i] = kernel->synchConsoleIn->GetChar();
+        //If str[i] = '\n' then assign str[i] = '\0' and return the string 
+        if (str[i] == '\n')
+        {
+            str[i] = '\0';
+            return str;
+        }
     }
     str[len] = '\0';
     return str;
 }
 
+//Print a string to console
+//Stop when reaching maxLen or meeting '\0'
 void PrintStringToConsole(char* str, int maxLen)
 {
     int i = 0;
@@ -185,6 +207,7 @@ void PrintStringToConsole(char* str, int maxLen)
     }
 }
 
+/*
 int stringLen(int strAddr, int limit)
 {
     int length = 0;
@@ -198,5 +221,6 @@ int stringLen(int strAddr, int limit)
 
     return length;
 }
+*/
 
 #endif /* ! __USERPROG_EXCEPTION_HELPER_H__ */
