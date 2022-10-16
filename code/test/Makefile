@@ -112,7 +112,7 @@ ifeq ($(hosttype),unknown)
 PROGRAMS = unknownhost
 else
 # change this if you create a new test program!
-PROGRAMS = add halt shell matmult sort segments
+PROGRAMS = add halt shell matmult sort segments createFile readNumPrintNum readCharPrintChar randomNum readStringPrintString help ascii
 endif
 
 all: $(PROGRAMS)
@@ -132,6 +132,53 @@ add.o: add.c
 add: add.o start.o
 	$(LD) $(LDFLAGS) start.o add.o -o add.coff
 	$(COFF2NOFF) add.coff add
+
+createFile.o: createFile.c
+	$(CC) $(CFLAGS) -c createFile.c
+
+createFile: createFile.o start.o
+	$(LD) $(LDFLAGS) start.o createFile.o -o createFile.coff
+	$(COFF2NOFF) createFile.coff createFile
+
+readNumPrintNum.o: readNumPrintNum.c
+	$(CC) $(CFLAGS) -c readNumPrintNum.c
+
+readNumPrintNum: readNumPrintNum.o start.o
+	$(LD) $(LDFLAGS) start.o readNumPrintNum.o -o readNumPrintNum.coff
+	$(COFF2NOFF) readNumPrintNum.coff readNumPrintNum
+
+readCharPrintChar.o: readCharPrintChar.c
+	$(CC) $(CFLAGS) -c readCharPrintChar.c
+
+readCharPrintChar: readCharPrintChar.o start.o
+	$(LD) $(LDFLAGS) start.o readCharPrintChar.o -o readCharPrintChar.coff
+	$(COFF2NOFF) readCharPrintChar.coff readCharPrintChar
+
+randomNum.o: randomNum.c
+	$(CC) $(CFLAGS) -c randomNum.c
+
+randomNum: randomNum.o start.o
+	$(LD) $(LDFLAGS) start.o randomNum.o -o randomNum.coff
+	$(COFF2NOFF) randomNum.coff randomNum
+
+readStringPrintString.o: readStringPrintString.c
+	$(CC) $(CFLAGS) -c readStringPrintString.c
+
+readStringPrintString: readStringPrintString.o start.o
+	$(LD) $(LDFLAGS) start.o readStringPrintString.o -o readStringPrintString.coff
+	$(COFF2NOFF) readStringPrintString.coff readStringPrintString
+
+help.o: help.c
+	$(CC) $(CFLAGS) -c help.c
+help: help.o start.o
+	$(LD) $(LDFLAGS) start.o help.o -o help.coff
+	$(COFF2NOFF) help.coff help
+
+ascii.o: ascii.c
+	$(CC) $(CFLAGS) -c ascii.c
+ascii: ascii.o start.o
+	$(LD) $(LDFLAGS) start.o ascii.o -o ascii.coff
+	$(COFF2NOFF) ascii.coff ascii
 
 shell.o: shell.c
 	$(CC) $(CFLAGS) -c shell.c

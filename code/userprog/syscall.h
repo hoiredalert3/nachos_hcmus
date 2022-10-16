@@ -36,6 +36,14 @@
 #define SC_ThreadJoin   15
 
 #define SC_Add		42
+#define SC_CreateFile 200
+#define SC_ReadNum 201
+#define SC_PrintNum 202
+#define SC_ReadChar 203
+#define SC_PrintChar 204
+#define SC_RandomNum 205
+#define SC_ReadString 206
+#define SC_PrintString 207
 
 #ifndef IN_ASM
 
@@ -56,8 +64,42 @@ void Halt();
 /*
  * Add the two operants and return the result
  */ 
-
 int Add(int op1, int op2);
+
+/*
+ * Read 1 number from console
+ */
+int ReadNum();
+
+/*
+ * Print 1 number to console
+ */
+void PrintNum(int num);
+
+/*
+ * Read 1 character from console
+ */
+char ReadChar();
+
+/*
+ * Print 1 character to console
+ */
+void PrintChar(char character);
+
+/*
+ * Return 1 random integer
+ */
+int RandomNum();
+
+/*
+ * Read 1 string from console
+ */
+void ReadString(char* buffer, int length);
+
+/*
+ * Print 1 string to console
+ */
+void PrintString(char* buffer);
 
 /* Address space control operations: Exit, Exec, Execv, and Join */
 
@@ -105,13 +147,17 @@ typedef int OpenFileId;
  * the console device.
  */
 
-#define ConsoleInput	0  
-#define ConsoleOutput	1  
- 
+#define ConsoleInput_	0  //Đổi tên vì trùng tên với class ConsoleInput trong file console.h
+#define ConsoleOutput_ 1   //Đổi tên vì trùng tên với class ConsoleOutput trong file console.h
+
 /* Create a Nachos file, with name "name" */
 /* Note: Create does not open the file.   */
 /* Return 1 on success, negative error code on failure */
 int Create(char *name);
+
+/* Test system call
+Create a Nachos file, with name "name" */
+int CreateFile(char *name);
 
 /* Remove a Nachos file, with name "name" */
 int Remove(char *name);

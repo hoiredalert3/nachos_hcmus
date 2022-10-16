@@ -1,69 +1,117 @@
-/* sort.c 
- *    Test program to sort a large number of integers.
- *
- *    Intention is to stress virtual memory system.
- *
- *    Ideally, we could read the unsorted array off of the file system,
- *	and store the result back to the file system!
+/* sort.c
+ *	Simple program that allows the user to input an integer array,
+ *  then sort it in increasing or decreasing order.
+ * 
  */
 
-
-/*
-#define UNIX
-#define UNIX_DEBUG
-*/
-
-#ifdef UNIX
-#include <stdio.h>
-#define Exit exit
-#else
 #include "syscall.h"
-#endif /* UNIX */
+#define MAXSIZE 100
 
-#define SIZE (1024)
+void inputArray(int *arr, int n);
 
-int A[SIZE];	/* size of physical memory; with code, we'll run out of space!*/
+void swap(int *a, int *b);
 
-int
-main()
+void bubbleSort(int *arr, int n, int sortOrder);
+
+void printArray(int *arr, int n);
+
+int main()
 {
-    int i, j, tmp;
+    int n = -1;
+    int arr[MAXSIZE];
+    int sortOrder = 0;
 
-    /* first initialize the array, in reverse sorted order */
-    for (i = 0; i < SIZE; i++) {
-        A[i] = (SIZE-1) - i;
-    }
+    while (n < 0 || n > 100)
+    {
+        PrintString("Enter the number of elements of the array (between 0 and 100 (inclusive)): ");
+        n = ReadNum();
 
-    /* then sort! */
-    for (i = 0; i < SIZE; i++) {
-        for (j = 0; j < (SIZE-1); j++) {
-	   if (A[j] > A[j + 1]) {	/* out of order -> need to swap ! */
-	      tmp = A[j];
-	      A[j] = A[j + 1];
-	      A[j + 1] = tmp;
-    	   }
+        if (n < 0 || n > 100)
+        {
+            PrintString("The number of elements of the array must be between 0 and 100 (inclusive)!\n");
+            PrintString("Please input again!\n");
         }
     }
 
-#ifdef UNIX_DEBUG
-    for (i=0; i<SIZE; i++) {
-        printf("%4d ", A[i]);
-	if (((i+1) % 15) == 0) {
-		printf("\n");
+    inputArray(arr, n);
+
+    PrintString("Enter the order that the array will be sorted in (0: increasing, otherwise: decreasing):\n");
+    sortOrder = ReadNum();
+    if (sortOrder == 0)
+        PrintString("You chose increasing order\n");
+    else
+        PrintString("You chose decreasing order\n");
+
+    PrintString("The original array:\n");
+    printArray(arr, n);
+
+    bubbleSort(arr, n, sortOrder);
+
+    PrintString("The sorted array:\n");
+    printArray(arr, n);
+
+    Halt();
+    /* not reached */
+}
+
+void inputArray(int *arr, int n)
+{
+    int i;
+    for (i = 0; i < n; ++i)
+    {
+        PrintString("Enter element number ");
+        PrintNum(i);
+        PrintString(": ");
+        arr[i] = ReadNum();
+    }
+}
+
+void swap(int *a, int *b)
+{
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+void bubbleSort(int *arr, int n, int sortOrder)
+{
+    int i, j;
+    int swapped;
+
+    for (i = 0; i < n - 1; ++i)
+    {
+        swapped = 0;
+        for (j = 0; j < n - i - 1; ++j)
+        {
+            if (sortOrder == 0)
+            {
+                if (arr[j] > arr[j + 1])
+                {
+                    swap(&arr[j], &arr[j + 1]);
+                    swapped = 1;
+                }
+            }
+            else 
+                if (arr[j] < arr[j + 1])
+                {
+                    swap(&arr[j], &arr[j + 1]);
+                    swapped = 1;
+                }
         }
-        if (A[i] != i) {
-            fprintf(stderr, "Out of order A[%d] = %d\n", i, A[i]);
-            Exit(1);
-        }   
-    }
-    printf("\n");
-#endif /* UNIX_DEBUG */
 
-    for (i=0; i<SIZE; i++) {
-        if (A[i] != i) {
-            Exit(1);
-        }   
+        // If no swap happen, break the loop
+        if (swapped == 0)
+            break;
     }
+}
 
-    Exit(0);
+void printArray(int *arr, int n)
+{
+    int i;
+    for (i = 0; i < n; ++i)
+    {
+        PrintNum(arr[i]);
+        PrintChar(' ');
+    }
+    PrintChar('\n');
 }
