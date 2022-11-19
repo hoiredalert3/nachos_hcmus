@@ -129,12 +129,14 @@ void ExceptionHandler(ExceptionType which)
 	{
 		// Xử lý các exceptions được liệt kê trong machine / machine.h
 		// no exception sẽ trả quyền điều khiển về HĐH
-	case NoException : DEBUG(dbgSys, "No exception.\n");
+	case NoException:
+		DEBUG(dbgSys, "No exception.\n");
 		return;
 		// Hầu hết các exception trong này là run - time errors
 		// khi các exception này xảy ra thì user program không thể được phục hồi
 		// HĐH hiển thị ra một thông báo lỗi và Halt hệ thống
-	case PageFaultException : DEBUG(dbgSys, "No valid translation found.\n");
+	case PageFaultException:
+		DEBUG(dbgSys, "No valid translation found.\n");
 		cerr << "No valid translation found. ExceptionType " << which << '\n';
 		SysHalt();
 
@@ -228,7 +230,6 @@ void ExceptionHandler(ExceptionType which)
 				DEBUG(dbgSys, "\n Not enough memory in system");
 				kernel->machine->WriteRegister(2, -1); // trả về lỗi cho chương
 				// trình người dùng
-				delete[] filename;
 				return;
 			}
 			DEBUG(dbgSys, "\n Finish reading filename.");
@@ -297,7 +298,7 @@ void ExceptionHandler(ExceptionType which)
 		{
 			// Lấy tham số cần in từ thanh ghi r4
 			char character = (char)kernel->machine->ReadRegister(4);
-			//In ra console
+			// In ra console
 			PrintCharToConsole(character);
 
 			increaseProgramCounter();
@@ -328,7 +329,7 @@ void ExceptionHandler(ExceptionType which)
 
 			if (len > MaxStringLength || len < 1)
 			{
-				DEBUG(dbgSys, "String length must be between 1 and " << MaxStringLength<< " (inclusive)\n");
+				DEBUG(dbgSys, "String length must be between 1 and " << MaxStringLength << " (inclusive)\n");
 				SysHalt();
 			}
 			DEBUG(dbgSys, "String length: " << len);
@@ -355,6 +356,191 @@ void ExceptionHandler(ExceptionType which)
 			// In ra console
 			PrintStringToConsole(systemString, MaxStringLength);
 			delete[] systemString;
+
+			increaseProgramCounter();
+
+			return;
+			ASSERTNOTREACHED();
+			break;
+		}
+		case SC_Create:
+		{
+			int virtAddr;
+			char *filename;
+
+			DEBUG(dbgSys, "\n SC_Create call ...");
+			DEBUG(dbgSys, "\n Reading virtual address of filename");
+			// Lấy tham số tên tập tin từ thanh ghi r4
+			virtAddr = kernel->machine->ReadRegister(4);
+			DEBUG(dbgSys, "\n Reading filename.");
+			// MaxFileLength là = 32
+			// Chuyển tên file từ user space sang system space
+			filename = User2System(virtAddr, MaxFileLength);
+
+			if (filename == NULL)
+			{
+				printf("\n Not enough memory in system");
+				DEBUG(dbgSys, "\n Not enough memory in system");
+				kernel->machine->WriteRegister(2, -1); // trả về lỗi cho chương
+				// trình người dùng
+				return;
+			}
+			DEBUG(dbgSys, "\n Finish reading filename.");
+			// DEBUG(‘a’,"\n File name : '"<<filename<<"'");
+			//  Create file with size = 0
+			//  Dùng đối tượng fileSystem của lớp OpenFile để tạo file,
+			//  việc tạo file này là sử dụng các thủ tục tạo file của hệ điều
+			//  hành Linux, chúng ta không quản ly trực tiếp các block trên
+			//  đĩa cứng cấp phát cho file, việc quản ly các block của file
+			//  trên ổ đĩa là một đồ án khác
+			if (!kernel->fileSystem->Create(filename))
+			{
+				printf("\n Error create file '%s'", filename);
+				kernel->machine->WriteRegister(2, -1);
+				delete filename;
+				return;
+			}
+			kernel->machine->WriteRegister(2, 0); // trả về  cho chương trình
+			// người dùng thành công
+			delete[] filename;
+			increaseProgramCounter();
+
+			return;
+			ASSERTNOTREACHED();
+			break;
+		}
+		case SC_Open:
+		{
+			int virtAddr;
+			char *filename;
+			int openType;
+
+			DEBUG(dbgSys, "\n SC_Open call ...");
+			DEBUG(dbgSys, "\n Reading virtual address of filename");
+			// Lấy tham số tên tập tin từ thanh ghi r4
+			virtAddr = kernel->machine->ReadRegister(4);
+			DEBUG(dbgSys, "\n Reading filename.");
+			// MaxFileLength là = 32
+			// Chuyển tên file từ user space sang system space
+			filename = User2System(virtAddr, MaxFileLength);
+
+			if (filename == NULL)
+			{
+				printf("\n Not enough memory in system");
+				DEBUG(dbgSys, "\n Not enough memory in system");
+				kernel->machine->WriteRegister(2, -1); // trả về lỗi cho chương
+				// trình người dùng
+				return;
+			}
+			DEBUG(dbgSys, "\n Finish reading filename.");
+
+			openType = kernel->machine->ReadRegister(5);
+			DEBUG(dbgSys, "\n Finish reading openType: " << openType);
+
+			int result = OpenFileHelper(filename, openType);
+
+			kernel->machine->WriteRegister(2, result);
+
+			delete filename;
+
+			increaseProgramCounter();
+
+			return;
+			ASSERTNOTREACHED();
+			break;
+		}
+		case SC_Close:
+		{
+			DEBUG(dbgSys, "\n SC_Close call ...");
+			DEBUG(dbgSys, "\n Reading OpenFileId");
+			int openFileId = kernel->machine->ReadRegister(4);
+			kernel->machine->WriteRegister(2, kernel->fileSystem->Close(openFileId));
+
+			increaseProgramCounter();
+
+			return;
+			ASSERTNOTREACHED();
+			break;
+		}
+		case SC_Read:
+		{
+			DEBUG(dbgSys, "\n SC_Read call ...");
+			int virtAddr = kernel->machine->ReadRegister(4);
+			int charCount = kernel->machine->ReadRegister(5);
+			int fileId = kernel->machine->ReadRegister(6);
+
+			char *systemString = new char[charCount + 1];
+			// Doc tu file vao systemString
+			kernel->machine->WriteRegister(2, ReadFile(systemString, charCount, fileId));
+
+			// Chuyển dữ liệu từ kernel space qua userspace
+			System2User(virtAddr, charCount, systemString);
+
+			delete[] systemString;
+
+			increaseProgramCounter();
+
+			return;
+			ASSERTNOTREACHED();
+			break;
+		}
+		case SC_Write:
+		{
+			int virtAddr = kernel->machine->ReadRegister(4);
+			int charCount = kernel->machine->ReadRegister(5);
+			char *systemString = User2System(virtAddr, charCount);
+			int fileId = kernel->machine->ReadRegister(6);
+
+			kernel->machine->WriteRegister(2, WriteFile(systemString, charCount, fileId));
+
+			delete[] systemString;
+			increaseProgramCounter();
+
+			return;
+			ASSERTNOTREACHED();
+			break;
+		}
+		case SC_Seek:
+		{
+			int seekPos = kernel->machine->ReadRegister(4);
+			int fileId = kernel->machine->ReadRegister(5);
+
+			kernel->machine->WriteRegister(2, SeekFile(seekPos, fileId));
+			increaseProgramCounter();
+
+			return;
+			ASSERTNOTREACHED();
+			break;
+		}
+		case SC_Remove:
+		{
+			int virtAddr;
+			char *filename;
+
+			DEBUG(dbgSys, "\n SC_Remove call ...");
+			DEBUG(dbgSys, "\n Reading virtual address of filename");
+			// Lấy tham số tên tập tin từ thanh ghi r4
+			virtAddr = kernel->machine->ReadRegister(4);
+			DEBUG(dbgSys, "\n Reading filename.");
+			// MaxFileLength là = 32
+			// Chuyển tên file từ user space sang system space
+			filename = User2System(virtAddr, MaxFileLength);
+
+			if (filename == NULL)
+			{
+				printf("\n Not enough memory in system");
+				DEBUG(dbgSys, "\n Not enough memory in system");
+				kernel->machine->WriteRegister(2, -1); // trả về lỗi cho chương
+				// trình người dùng
+				return;
+			}
+			DEBUG(dbgSys, "\n Finish reading filename.");
+
+			int result = (kernel->fileSystem->Remove(filename) == true ? 0 : -1);
+
+			kernel->machine->WriteRegister(2, result);
+
+			delete filename;
 
 			increaseProgramCounter();
 

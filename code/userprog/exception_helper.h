@@ -22,8 +22,8 @@
 // A character buffer to read and write int32 number
 char characterBuffer[MAX_NUM_LENGTH + 1];
 
-//Check if a character is empty space
-char isEmptySpace(char ch) 
+// Check if a character is empty space
+char isEmptySpace(char ch)
 {
     return (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch == '\x0b');
 }
@@ -43,7 +43,7 @@ void readCharacters()
     memset(characterBuffer, 0, sizeof(characterBuffer));
     char ch = kernel->synchConsoleIn->GetChar();
 
-    //Read the first character and check
+    // Read the first character and check
     if (ch == EOF || isEmptySpace(ch))
     {
         DEBUG(dbgSys, "Illegal character found, ascii code " << (int)ch << '\n');
@@ -51,7 +51,7 @@ void readCharacters()
     }
 
     int len = 0;
-    //Reads until meeting an empty space or EOF
+    // Reads until meeting an empty space or EOF
     while (!(isEmptySpace(ch) || ch == EOF))
     {
         characterBuffer[len++] = ch;
@@ -89,7 +89,7 @@ int ReadNumFromConsole()
 
     for (int i = negative; i < len; ++i)
     {
-        
+
         char c = characterBuffer[i];
 
         if (c < '0' || c > '9')
@@ -103,25 +103,24 @@ int ReadNumFromConsole()
     if (negative)
         num = -num;
 
-    //If negative is true but num is positive
-    //or if negative is false but num is negative
-    //then integer overflow happened
+    // If negative is true but num is positive
+    // or if negative is false but num is negative
+    // then integer overflow happened
     if ((negative && num > 0) || (!negative && num < 0))
     {
         DEBUG(dbgSys, "Number " << characterBuffer << " doesn't fit in int32");
         return 0;
     }
-        
+
     // Num is safe to return
     return num;
-
 }
 
 // Print an integer to console
 // Uses synchConsoleOut->PutChar to print every digit
 void PrintNumToConsole(int num)
 {
-    //Print out '0' if num is 0
+    // Print out '0' if num is 0
     if (num == 0)
         return kernel->synchConsoleOut->PutChar('0');
 
@@ -133,7 +132,7 @@ void PrintNumToConsole(int num)
             kernel->synchConsoleOut->PutChar("2147483648"[i]);
         return;
     }
-    //If num < 0, print '-' and reverse the sign of num
+    // If num < 0, print '-' and reverse the sign of num
     if (num < 0)
     {
         kernel->synchConsoleOut->PutChar('-');
@@ -147,27 +146,27 @@ void PrintNumToConsole(int num)
         characterBuffer[n++] = num % 10;
         num /= 10;
     }
-    //Print to console
+    // Print to console
     for (int i = n - 1; i >= 0; --i)
         kernel->synchConsoleOut->PutChar(characterBuffer[i] + '0');
 }
 
-//Read and return a character from console
+// Read and return a character from console
 char ReadCharFromConsole()
 {
     return kernel->synchConsoleIn->GetChar();
 }
 
-//Print a character to console
+// Print a character to console
 void PrintCharToConsole(char ch)
 {
     kernel->synchConsoleOut->PutChar(ch);
 }
 
-//Return a random positive integer between 1 and INT32_MAX (inclusive)
+// Return a random positive integer between 1 and INT32_MAX (inclusive)
 int GetRandomNumber()
 {
-    //Call rand from stdlib to create a random number
+    // Call rand from stdlib to create a random number
     int num = rand();
     // GetRandomNumber must return a positive integer
     if (num == 0)
@@ -175,8 +174,8 @@ int GetRandomNumber()
     return num;
 }
 
-//Read and return a string from console
-//Stop when reaching max length or meeting '\n'
+// Read and return a string from console
+// Stop when reaching max length or meeting '\n'
 char *ReadStringFromConsole(int len)
 {
     char *str;
@@ -184,7 +183,7 @@ char *ReadStringFromConsole(int len)
     for (int i = 0; i < len; ++i)
     {
         str[i] = kernel->synchConsoleIn->GetChar();
-        //If str[i] = '\n' then assign str[i] = '\0' and return the string 
+        // If str[i] = '\n' then assign str[i] = '\0' and return the string
         if (str[i] == '\n')
         {
             str[i] = '\0';
@@ -195,9 +194,9 @@ char *ReadStringFromConsole(int len)
     return str;
 }
 
-//Print a string to console
-//Stop when reaching maxLen or meeting '\0'
-void PrintStringToConsole(char* str, int maxLen)
+// Print a string to console
+// Stop when reaching maxLen or meeting '\0'
+void PrintStringToConsole(char *str, int maxLen)
 {
     int i = 0;
     while (str[i] != '\0' && i < maxLen)
@@ -207,20 +206,65 @@ void PrintStringToConsole(char* str, int maxLen)
     }
 }
 
-/*
-int stringLen(int strAddr, int limit)
+// Helper function to open a file
+
+int OpenFileHelper(char *filename, int openType)
 {
-    int length = 0;
-    int oneChar;
-
-    do
+    if (openType != 0 && openType != 1)
     {
-        kernel->machine->ReadMem(strAddr + length, 1, &oneChar);
-        length++;
-    } while (oneChar == '\0' || length > limit);
+        DEBUG(dbgSys, "\nOpen type must be 0 or 1. Received open type: " << openType);
+        return -1;
+    }
 
-    return length;
+    int fileId = 0;
+    fileId = kernel->fileSystem->Open(filename, openType);
+    if (fileId == -1)
+        return -1;
+    DEBUG(dbgSys, "\nOpened file successfully");
+    return fileId;
 }
-*/
+
+int ReadFile(char *buffer, int charCount, int fileId)
+{
+    if (fileId == 0)
+    {
+        int i;
+        for (i = 1; i <= charCount; ++i)
+        {
+            buffer[i] = kernel->synchConsoleIn->GetChar();
+            if (buffer[i] == EOF)
+            {
+                buffer[i] = 0;
+                return -1;
+            }
+        }
+        return i - 1;
+    }
+    return kernel->fileSystem->Read(buffer, charCount, fileId);
+}
+
+int WriteFile(char *buffer, int charCount, int fileId)
+{
+    if (fileId == 1)
+    {
+        for (int i = 0; i < charCount; ++i)
+        {
+            kernel->synchConsoleOut->PutChar(buffer[i]);
+        }
+
+        return charCount;
+    }
+    return kernel->fileSystem->Write(buffer, charCount, fileId);
+}
+
+int SeekFile(int seekPos, int fileId)
+{
+    if (fileId <= 1)
+    {
+        DEBUG(dbgSys, "\nCan't seek in console");
+        return -1;
+    }
+    return kernel->fileSystem->Seek(seekPos, fileId);
+}
 
 #endif /* ! __USERPROG_EXCEPTION_HELPER_H__ */

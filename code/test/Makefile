@@ -112,7 +112,7 @@ ifeq ($(hosttype),unknown)
 PROGRAMS = unknownhost
 else
 # change this if you create a new test program!
-PROGRAMS = add halt shell matmult sort segments createFile readNumPrintNum readCharPrintChar randomNum readStringPrintString help ascii
+PROGRAMS = add halt shell matmult sort segments createfile createFileTest readNumPrintNum readCharPrintChar randomNum readStringPrintString help ascii openFile removeFile readFile
 endif
 
 all: $(PROGRAMS)
@@ -133,12 +133,19 @@ add: add.o start.o
 	$(LD) $(LDFLAGS) start.o add.o -o add.coff
 	$(COFF2NOFF) add.coff add
 
-createFile.o: createFile.c
-	$(CC) $(CFLAGS) -c createFile.c
+createfile.o: createfile.c
+	$(CC) $(CFLAGS) -c createfile.c
 
-createFile: createFile.o start.o
-	$(LD) $(LDFLAGS) start.o createFile.o -o createFile.coff
-	$(COFF2NOFF) createFile.coff createFile
+createfile: createfile.o start.o
+	$(LD) $(LDFLAGS) start.o createfile.o -o createfile.coff
+	$(COFF2NOFF) createfile.coff createfile
+
+createFileTest.o: createFileTest.c
+	$(CC) $(CFLAGS) -c createFileTest.c
+
+createFileTest: createFileTest.o start.o
+	$(LD) $(LDFLAGS) start.o createFileTest.o -o createFileTest.coff
+	$(COFF2NOFF) createFileTest.coff createFileTest
 
 readNumPrintNum.o: readNumPrintNum.c
 	$(CC) $(CFLAGS) -c readNumPrintNum.c
@@ -167,6 +174,27 @@ readStringPrintString.o: readStringPrintString.c
 readStringPrintString: readStringPrintString.o start.o
 	$(LD) $(LDFLAGS) start.o readStringPrintString.o -o readStringPrintString.coff
 	$(COFF2NOFF) readStringPrintString.coff readStringPrintString
+
+openFile.o: openFile.c
+	$(CC) $(CFLAGS) -c openFile.c
+
+openFile: openFile.o start.o
+	$(LD) $(LDFLAGS) start.o openFile.o -o openFile.coff
+	$(COFF2NOFF) openFile.coff openFile
+
+readFile.o: readFile.c
+	$(CC) $(CFLAGS) -c readFile.c
+
+readFile: readFile.o start.o
+	$(LD) $(LDFLAGS) start.o readFile.o -o readFile.coff
+	$(COFF2NOFF) readFile.coff readFile
+
+removeFile.o: removeFile.c
+	$(CC) $(CFLAGS) -c removeFile.c
+
+removeFile: removeFile.o start.o
+	$(LD) $(LDFLAGS) start.o removeFile.o -o removeFile.coff
+	$(COFF2NOFF) removeFile.coff removeFile
 
 help.o: help.c
 	$(CC) $(CFLAGS) -c help.c

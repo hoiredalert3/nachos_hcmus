@@ -3,7 +3,6 @@
 
 int main()
 {
-    int len;
     /*Create a file*/
     if (CreateFile("TuiDuocTaoRaThu2.txt") == -1)
     {
