@@ -1,4 +1,4 @@
-/* cat.c
+/* copy.c
  *	Simple program to copy content of a source file to an output file
  *
  */
