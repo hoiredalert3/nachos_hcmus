@@ -25,7 +25,7 @@ char characterBuffer[MAX_NUM_LENGTH + 1];
 // Check if a character is empty space
 char isEmptySpace(char ch)
 {
-    return (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch == '\x0b');
+    return (ch == '\n' || ch == ' ' || ch == '\r' || ch == '\t' || ch == '\x0b');
 }
 
 /**
@@ -228,17 +228,18 @@ int ReadFile(char *buffer, int charCount, int fileId)
 {
     if (fileId == 0)
     {
-        int i;
-        for (i = 1; i <= charCount; ++i)
+        for (int i = 0; i < charCount; ++i)
         {
             buffer[i] = kernel->synchConsoleIn->GetChar();
-            if (buffer[i] == EOF)
+            // If buffer[i] = '\n' then assign buffer[i] = '\0' and return the number of bytes read
+            if (buffer[i] == '\n')
             {
-                buffer[i] = 0;
-                return -1;
+                buffer[i] = '\0';
+                return i;
             }
         }
-        return i - 1;
+        buffer[charCount] = '\0';
+        return charCount;
     }
     return kernel->fileSystem->Read(buffer, charCount, fileId);
 }

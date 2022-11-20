@@ -92,9 +92,6 @@ public:
             return -1;
 
         int result = openFile[index]->Read(buffer, charCount);
-        // Return -1 if the program didn't read enough bytes
-        if (result != charCount)
-            return -1;
         return result;
     }
 
@@ -104,7 +101,8 @@ public:
             return -1;
         if (openFile[index] == NULL || fileOpenMode[index] == READ)
             return -1;
-        return openFile[index]->Write(buffer, charCount);
+        int result = openFile[index]->Write(buffer, charCount);
+        return result;
     }
 
     int Seek(int pos, int index)
