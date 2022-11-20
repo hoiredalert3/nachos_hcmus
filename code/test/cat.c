@@ -8,7 +8,6 @@
 int main()
 {
     OpenFileId id1;
-    int fileLen;
     int bytesRead;
     char filename[50];
     char buffer[256];
